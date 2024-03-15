@@ -19,32 +19,6 @@ std::vector<std::string> trace_buffer;
 char tmp_trace_char[256];
 
 static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
-  /*switch (local_dtype) {
-    case MPI_INT:
-      return sizeof(int);
-      break;
-    case MPI_FLOAT:
-      return sizeof(float);
-      break;
-    case MPI_LONG:
-      return sizeof(float);
-      break;
-    case MPI_DOUBLE:
-      return sizeof(double);
-      break;
-    case MPI_CHAR:
-      return sizeof(char);
-      break;
-    case MPI_BYTE:
-      return 1;
-      break;
-    case MPI_LONG_LONG_INT:
-      return sizeof(long long int);
-      break;
-    default:
-      printf("I have no idea what size this datatype is!! [%d]\n",datatype);
-      break;
-  }*/
   int local_size;
   MPI_Type_size(datatype, &local_size);
   if (local_size == MPI_UNDEFINED) {
