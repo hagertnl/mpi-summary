@@ -1,0 +1,6 @@
+*.png
+*.pyc
+__pycache__
+*.c
+*.cpp
+*.so
