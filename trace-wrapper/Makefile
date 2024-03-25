@@ -18,7 +18,7 @@ summit: generate_wrap
 	mpicxx $(CXX_FLAGS) -o mpi_trace_summit.so output.cpp
 
 generate_wrap:
-	../wrap.py -o output.cpp mpi_trace.w
+	python3 ../wrap/wrap.py -o output.cpp mpi_trace.w
 
 clean:
 	rm -f ./output.cpp

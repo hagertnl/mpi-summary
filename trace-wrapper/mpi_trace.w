@@ -304,21 +304,29 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(comm, &nranks);
-  int i, max_rank = -1;
-  size_t total = 0, max_size = 0;
+  int i, max_rank_s = -1, max_rank_r = -1;
+  size_t total_s = 0, max_size_s = 0;
+  size_t total_r = 0, max_size_r = 0;
   for (i = 0; i < nranks; i++) {
-    const size_t tmp_comp = sendcounts[i] * get_mpi_type_size(sendtype);
-    total += tmp_comp;
-    if (tmp_comp > max_size) {
-      max_size = tmp_comp;
-      max_rank = i;
+    const size_t tmp_comp_s = sendcounts[i] * get_mpi_type_size(sendtype);
+    const size_t tmp_comp_r = recvcounts[i] * get_mpi_type_size(sendtype);
+    total_s += tmp_comp_s;
+    total_r += tmp_comp_r;
+    if (tmp_comp_s > max_size_s) {
+      max_size_s = tmp_comp_s;
+      max_rank_s = i;
+    }
+    if (tmp_comp_r > max_size_r) {
+      max_size_r = tmp_comp_r;
+      max_rank_r = i;
     }
   }
   // check if communicator is COMM_WORLD or not:
   int issame = -1;
   PMPI_Comm_compare(comm, MPI_COMM_WORLD, &issame);
   std::string comm_name = "MPI_COMM_WORLD";
-  int max_rank_global = max_rank;
+  int max_rank_global_s = max_rank_s;
+  int max_rank_global_r = max_rank_r;
   if (issame == MPI_UNEQUAL) {
     int npcs;
     MPI_Comm_size(comm, &npcs);
@@ -327,18 +335,21 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
     MPI_Group grp_global, grp_local;
     PMPI_Comm_group(comm, &grp_local);
     PMPI_Comm_group(MPI_COMM_WORLD, &grp_global);
-    PMPI_Group_translate_ranks(grp_local, 1, &max_rank, grp_global, &max_rank_global);
+    PMPI_Group_translate_ranks(grp_local, 1, &max_rank_s, grp_global, &max_rank_global_s);
+    PMPI_Group_translate_ranks(grp_local, 1, &max_rank_r, grp_global, &max_rank_global_r);
   }
 #if USE_STDIO == 0
   memset(tmp_trace_char, 0, 256);
-  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes total, max of %zu to rank %d to %s\n", rank,
+  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes total, max of %zu to rank %d, received %zu bytes total, max of %zu from rank %d, to %s\n", rank,
             start_timestamp, end_timestamp, end_timestamp - start_timestamp,
-            total, max_size, max_rank_global, comm_name.c_str());
+            total_s, max_size_s, max_rank_global_s,
+            total_r, max_size_r, max_rank_global_r, comm_name.c_str());
   trace_buffer.push_back(tmp_trace_char);
 #else
-  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes total, max of %zu to rank %d to %s\n", rank,
+  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes total, max of %zu to rank %d, received %zu bytes total, max of %zu from rank %d, to %s\n", rank,
             start_timestamp, end_timestamp, end_timestamp - start_timestamp,
-            total, max_size, max_rank_global, comm_name.c_str());
+            total_s, max_size_s, max_rank_global_s,
+            total_r, max_size_r, max_rank_global_r, comm_name.c_str());
 #endif
 }
 {{endfn}}
@@ -455,7 +466,7 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
 
 
 // Lastly, override all other calls to catch the calls we aren't tracing
-{{fnall foo MPI_Send MPI_Isend MPI_Recv MPI_Irecv MPI_Barrier MPI_Info_create MPI_Info_set MPI_Info_free MPI_File_open MPI_Comm_get_attr MPI_Comm_rank MPI_Comm_size MPI_Reduce MPI_Bcast MPI_Gather MPI_Scatter MPI_Wait MPI_Sendrecv MPI_Alltoall MPI_Allreduce MPI_Allgather MPI_Alltoallv MPI_Allgatherv MPI_Finalize MPI_Init MPI_Waitany MPI_Waitall MPI_Type_size MPI_Get_library_version MPI_Cart_create MPI_Cart_get MPI_Comm_free MPI_Comm_dup}} {
+{{fnall foo MPI_Send MPI_Isend MPI_Recv MPI_Irecv MPI_Barrier MPI_Info_create MPI_Info_set MPI_Info_free MPI_File_open MPI_Comm_get_attr MPI_Comm_rank MPI_Comm_size MPI_Reduce MPI_Bcast MPI_Gather MPI_Scatter MPI_Wait MPI_Sendrecv MPI_Alltoall MPI_Allreduce MPI_Allgather MPI_Alltoallv MPI_Allgatherv MPI_Finalize MPI_Init MPI_Waitany MPI_Waitall MPI_Type_size MPI_Get_library_version MPI_Cart_create MPI_Cart_get MPI_Comm_free MPI_Comm_dup MPI_Cart_shift MPI_Cart_rank}} {
   {{callfn}}
 #if DEBUG == 0
   printf("Warning: {{foo}} not traced.\n");

@@ -26,8 +26,8 @@ if (not t2.source == 91) or \
 
 t3 = TraceLine('[Rank 91] MPI_Irecv started 1710421640.359012604, ended 1710421640.359500170 (elapsed 0.000487566), moved 4661928 bytes from source 95')
 if (not t3.source == 91) or \
-   (not t3.bytes_sent == 4661928) or \
-   (not t3.bytes_recv == 0) or \
+   (not t3.bytes_sent == 0) or \
+   (not t3.bytes_recv == 4661928) or \
    (not t3.bytes_total == t3.bytes_recv) or \
    (not len(t3.recv_from) == 1) or \
    (not len(t3.sent_to) == 0):
@@ -42,6 +42,26 @@ if (not t4.source == 91) or \
    (not len(t4.recv_from) == 1) or \
    (not len(t4.sent_to) == 1):
     print(f"Allreduce validation failed! t4.source={t4.source}, t4.bytes_sent={t4.bytes_sent}, t4.bytes_recv={t4.bytes_recv}, t4.bytes_total={t4.bytes_total}, len(t4.recv_from)={len(t4.recv_from)}, len(t4.sent_to)={len(t4.sent_to)}")
+    count_wrong += 1
+
+t5 = TraceLine('[Rank 94] MPI_Alltoall started 1711343528.706991673, ended 1711343528.707129717 (elapsed 0.000138044), sent 4 bytes to MPI_COMM_WORLD', nranks=384)
+if (not t5.source == 94) or \
+   (not t5.bytes_sent == (4 * 383)) or \
+   (not t5.bytes_recv == (4 * 383)) or \
+   (not t5.bytes_total == t5.bytes_recv + t5.bytes_recv) or \
+   (not len(t5.recv_from) == 383) or \
+   (not len(t5.sent_to) == 383):
+    print(f"Alltoall validation failed! t5.source={t5.source}, t5.bytes_sent={t5.bytes_sent}, t5.bytes_recv={t5.bytes_recv}, t5.bytes_total={t5.bytes_total}, len(t5.recv_from)={len(t5.recv_from)}, len(t5.sent_to)={len(t5.sent_to)}")
+    count_wrong += 1
+
+t6 = TraceLine('[Rank 94] MPI_Alltoallv started 1711343528.709104776, ended 1711343528.709333181 (elapsed 0.000228405), sent 272 bytes total, max of 16 to rank 11 to MPI_COMM_WORLD')
+if (not t6.source == 94) or \
+   (not t6.bytes_sent == 272) or \
+   (not t6.bytes_recv == 0) or \
+   (not t6.bytes_total == t6.bytes_recv + t6.bytes_recv) or \
+   (not len(t6.recv_from) == 0) or \
+   (not len(t6.sent_to) == 0):
+    print(f"Alltoallv validation failed! t6.source={t6.source}, t6.bytes_sent={t6.bytes_sent}, t6.bytes_recv={t6.bytes_recv}, t6.bytes_total={t6.bytes_total}, len(t6.recv_from)={len(t6.recv_from)}, len(t6.sent_to)={len(t6.sent_to)}")
     count_wrong += 1
 
 if count_wrong == 0:
