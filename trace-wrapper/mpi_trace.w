@@ -362,27 +362,50 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
   clock_gettime(CLOCK_REALTIME, &tend);
   const double start_timestamp = (double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec;
   const double end_timestamp = (double)tend.tv_sec + 1.0e-9*tend.tv_nsec;
+  // Summarize the output with total & max (+max rank)
+  int nranks;
   int rank;
-  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(comm, &nranks);
+  int i, max_rank_s = -1, max_rank_r = -1;
+  size_t total_r = 0, max_size_r = 0;
+  for (i = 0; i < nranks; i++) {
+    const size_t tmp_comp_r = recvcounts[i] * get_mpi_type_size(recvtype);
+    total_r += tmp_comp_r;
+    if (tmp_comp_r > max_size_r) {
+      max_size_r = tmp_comp_r;
+      max_rank_r = i;
+    }
+  }
   // check if communicator is COMM_WORLD or not:
   int issame = -1;
   PMPI_Comm_compare(comm, MPI_COMM_WORLD, &issame);
   std::string comm_name = "MPI_COMM_WORLD";
+  int max_rank_global_s = max_rank_s;
+  int max_rank_global_r = max_rank_r;
   if (issame == MPI_UNEQUAL) {
     int npcs;
     MPI_Comm_size(comm, &npcs);
     comm_name = "a sub-communicator with " + std::to_string(npcs) + " processes";
+    // translate max_rank, too
+    MPI_Group grp_global, grp_local;
+    PMPI_Comm_group(comm, &grp_local);
+    PMPI_Comm_group(MPI_COMM_WORLD, &grp_global);
+    PMPI_Group_translate_ranks(grp_local, 1, &max_rank_s, grp_global, &max_rank_global_s);
+    PMPI_Group_translate_ranks(grp_local, 1, &max_rank_r, grp_global, &max_rank_global_r);
   }
 #if USE_STDIO == 0
   memset(tmp_trace_char, 0, 256);
-  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes to %s\n", rank,
+  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes, received %zu bytes total, max of %zu from rank %d, to %s\n", rank,
             start_timestamp, end_timestamp, end_timestamp - start_timestamp,
-            sendcount * get_mpi_type_size(sendtype), comm_name.c_str());
+            sendcount * get_mpi_type_size(sendtype),
+            total_r, max_size_r, max_rank_global_r, comm_name.c_str());
   trace_buffer.push_back(tmp_trace_char);
 #else
-  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes to %s\n", rank,
+  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), sent %zu bytes, received %zu bytes total, max of %zu from rank %d, to %s\n", rank,
             start_timestamp, end_timestamp, end_timestamp - start_timestamp,
-            sendcount * get_mpi_type_size(sendtype), comm_name.c_str());
+            sendcount * get_mpi_type_size(sendtype),
+            total_r, max_size_r, max_rank_global_r, comm_name.c_str());
 #endif
 }
 {{endfn}}
