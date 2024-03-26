@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 class TraceLine:
 
     def __init__(self, line, nranks=1):
@@ -50,10 +52,10 @@ class TraceLine:
             self.mpi_op_name = mpi_op
             self.source = int(line_splt[1].replace(']', ''))
             if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.')
+                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
             if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Alltoall that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.')
-                print('ERROR: Alltoall to non-MPI_COMM_WORLD has not been implemented yet')
+                print('Found Alltoall that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                print('ERROR: Alltoall to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
                 #self.bytes_sent = int(line_splt[10]) 
                 #self.bytes_recv = int(line_splt[10])
             else:
@@ -69,10 +71,10 @@ class TraceLine:
             self.mpi_op_name = mpi_op
             self.source = int(line_splt[1].replace(']', ''))
             if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.')
+                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
             if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Allreduce that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.')
-                print('ERROR: Allreduce to non-MPI_COMM_WORLD has not been implemented yet')
+                print('Found Allreduce that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                print('ERROR: Allreduce to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
             else:
                 self.sent_to[0] = int(line_splt[10])
                 self.recv_from[0] = int(line_splt[10])
@@ -84,10 +86,10 @@ class TraceLine:
             self.mpi_op_name = mpi_op
             self.source = int(line_splt[1].replace(']', ''))
             if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.')
+                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
             if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Alltoallv that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.')
-                print('ERROR: Alltoallv to non-MPI_COMM_WORLD has not been implemented yet')
+                print('Found Alltoallv that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                print('ERROR: Alltoallv to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
                 #self.bytes_sent = int(line_splt[10]) 
                 #self.bytes_recv = int(line_splt[10])
             else:

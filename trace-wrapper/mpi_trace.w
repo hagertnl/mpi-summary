@@ -71,6 +71,74 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
 }
 {{endfn}}
 
+/* Trace each MPI_Send_init & Recv_init ***************************************/
+{{fn foo MPI_Send_init}} {
+  struct timespec tstart={0,0}, tend={0,0};
+  clock_gettime(CLOCK_REALTIME, &tstart);
+  {{callfn}}
+  clock_gettime(CLOCK_REALTIME, &tend);
+  const double start_timestamp = (double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec;
+  const double end_timestamp = (double)tend.tv_sec + 1.0e-9*tend.tv_nsec;
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  // check if communicator is COMM_WORLD or not:
+  int issame = -1;
+  PMPI_Comm_compare(comm, MPI_COMM_WORLD, &issame);
+  int global_dest = dest;
+  if (issame == MPI_UNEQUAL) {
+    MPI_Group grp_global, grp_local;
+    PMPI_Comm_group(comm, &grp_local);
+    PMPI_Comm_group(MPI_COMM_WORLD, &grp_global);
+    PMPI_Group_translate_ranks(grp_local, 1, &dest, grp_global, &global_dest);
+  }
+#if USE_STDIO == 0
+  memset(tmp_trace_char, 0, 256);
+  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), initialized buffer of size %zu bytes with partner %d\n", rank,
+            start_timestamp, end_timestamp, end_timestamp - start_timestamp,
+            count * get_mpi_type_size(datatype), global_dest);
+  trace_buffer.push_back(tmp_trace_char);
+#else
+  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), initialized buffer of size %zu bytes with partner %d\n", rank,
+            start_timestamp, end_timestamp, end_timestamp - start_timestamp,
+            count * get_mpi_type_size(datatype), global_dest);
+#endif
+}
+{{endfn}}
+
+/* Trace each MPI_Send_init & Recv_init ***************************************/
+{{fn foo MPI_Recv_init}} {
+  struct timespec tstart={0,0}, tend={0,0};
+  clock_gettime(CLOCK_REALTIME, &tstart);
+  {{callfn}}
+  clock_gettime(CLOCK_REALTIME, &tend);
+  const double start_timestamp = (double)tstart.tv_sec + 1.0e-9*tstart.tv_nsec;
+  const double end_timestamp = (double)tend.tv_sec + 1.0e-9*tend.tv_nsec;
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  // check if communicator is COMM_WORLD or not:
+  int issame = -1;
+  PMPI_Comm_compare(comm, MPI_COMM_WORLD, &issame);
+  int global_dest = source;
+  if (issame == MPI_UNEQUAL) {
+    MPI_Group grp_global, grp_local;
+    PMPI_Comm_group(comm, &grp_local);
+    PMPI_Comm_group(MPI_COMM_WORLD, &grp_global);
+    PMPI_Group_translate_ranks(grp_local, 1, &source, grp_global, &global_dest);
+  }
+#if USE_STDIO == 0
+  memset(tmp_trace_char, 0, 256);
+  snprintf(tmp_trace_char, 256, "[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), initialized buffer of size %zu bytes with partner %d\n", rank,
+            start_timestamp, end_timestamp, end_timestamp - start_timestamp,
+            count * get_mpi_type_size(datatype), global_dest);
+  trace_buffer.push_back(tmp_trace_char);
+#else
+  printf("[Rank %d] {{foo}} started %.9f, ended %.9f (elapsed %.9f), initialized buffer of size %zu bytes with partner %d\n", rank,
+            start_timestamp, end_timestamp, end_timestamp - start_timestamp,
+            count * get_mpi_type_size(datatype), global_dest);
+#endif
+}
+{{endfn}}
+
 /* Trace each MPI_Recv ********************************************************/
 {{fn foo MPI_Recv MPI_Irecv}} {
   struct timespec tstart={0,0}, tend={0,0};
@@ -432,7 +500,7 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
 }
 {{endfn}}
 
-{{fn foo MPI_Wait}} {
+{{fn foo MPI_Wait MPI_Start}} {
   struct timespec tstart={0,0}, tend={0,0};
   clock_gettime(CLOCK_REALTIME, &tstart);
   {{callfn}}
@@ -489,7 +557,7 @@ static inline size_t get_mpi_type_size(MPI_Datatype datatype) {
 
 
 // Lastly, override all other calls to catch the calls we aren't tracing
-{{fnall foo MPI_Send MPI_Isend MPI_Recv MPI_Irecv MPI_Barrier MPI_Info_create MPI_Info_set MPI_Info_free MPI_File_open MPI_Comm_get_attr MPI_Comm_rank MPI_Comm_size MPI_Reduce MPI_Bcast MPI_Gather MPI_Scatter MPI_Wait MPI_Sendrecv MPI_Alltoall MPI_Allreduce MPI_Allgather MPI_Alltoallv MPI_Allgatherv MPI_Finalize MPI_Init MPI_Waitany MPI_Waitall MPI_Type_size MPI_Get_library_version MPI_Cart_create MPI_Cart_get MPI_Comm_free MPI_Comm_dup MPI_Cart_shift MPI_Cart_rank}} {
+{{fnall foo MPI_Send MPI_Isend MPI_Recv MPI_Irecv MPI_Barrier MPI_Info_create MPI_Info_set MPI_Info_free MPI_File_open MPI_Comm_get_attr MPI_Comm_rank MPI_Comm_size MPI_Reduce MPI_Bcast MPI_Gather MPI_Scatter MPI_Wait MPI_Sendrecv MPI_Alltoall MPI_Allreduce MPI_Allgather MPI_Alltoallv MPI_Allgatherv MPI_Finalize MPI_Init MPI_Waitany MPI_Waitall MPI_Type_size MPI_Get_library_version MPI_Cart_create MPI_Cart_get MPI_Comm_free MPI_Comm_dup MPI_Cart_shift MPI_Cart_rank MPI_Recv_init MPI_Start MPI_Send_init}} {
   {{callfn}}
 #if DEBUG == 0
   printf("Warning: {{foo}} not traced.\n");
