@@ -47,7 +47,16 @@ $0 ~ /MPI_Send_init/ {
     }
 }
 
-$0 !~ /[Rr]ecv/  && $0 ~ /bytes/{
+$0 ~ /\[Rank 0\] MPI_Bcast/ {
+    uniqcall[$3]++;
+    callsizes[$3]+=$11;
+    sum=sum+$11;
+    if($11 > max) {
+        max=$11; maxcall=$3
+    }
+}
+
+$0 !~ /[Rr]ecv/ && $0 !~ /Bcast/ && $0 ~ /bytes/ {
     uniqcall[$3]++;
     callsizes[$3]+=$11;
     sum=sum+$11;
