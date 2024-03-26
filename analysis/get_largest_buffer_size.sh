@@ -56,7 +56,7 @@ $0 ~ /\[Rank 0\] MPI_Bcast/ {
     }
 }
 
-$0 !~ /[Rr]ecv/ && $0 !~ /Bcast/ && $0 ~ /bytes/ {
+$0 !~ /MPI_[I]?[Rr]ecv/ && $0 !~ /Bcast/ && $0 ~ /bytes/ {
     uniqcall[$3]++;
     callsizes[$3]+=$11;
     sum=sum+$11;
