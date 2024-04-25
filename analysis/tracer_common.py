@@ -20,9 +20,9 @@ class TraceLine:
         # Rank that generated the message
         self.source = -1
         # Number of ranks in the call
-        self.mpi_op_name = 'NOT_SET'
         line_splt = line.split()
         mpi_op = line_splt[2]
+        self.mpi_op_name = mpi_op
         self.start = float(line_splt[4].replace(',', ''))
         self.end = float(line_splt[6])
         if mpi_op == 'MPI_Send' or mpi_op == 'MPI_Isend':
@@ -47,56 +47,56 @@ class TraceLine:
             self.bytes_recv = int(line_splt[16])
             self.source = int(line_splt[1].replace(']', ''))
             self.bytes_total = self.bytes_recv + self.bytes_sent
-        elif mpi_op == 'MPI_Alltoall':
+        #elif mpi_op == 'MPI_Alltoall':
             # Column 10 for byte count
-            self.mpi_op_name = mpi_op
-            self.source = int(line_splt[1].replace(']', ''))
-            if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
-            if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Alltoall that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
-                print('ERROR: Alltoall to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
+            #self.mpi_op_name = mpi_op
+            #self.source = int(line_splt[1].replace(']', ''))
+            #if self.nranks == 1:
+                #print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
+            #if not line_splt[13] == 'MPI_COMM_WORLD':
+                #print('Found Alltoall that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                #print('ERROR: Alltoall to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
                 #self.bytes_sent = int(line_splt[10]) 
                 #self.bytes_recv = int(line_splt[10])
-            else:
-                for i in range(0,self.nranks):
-                    if not i == self.source:
-                        self.sent_to[i] = int(line_splt[10])
-                        self.recv_from[i] = int(line_splt[10])
-                self.bytes_sent = int(line_splt[10]) * (self.nranks - 1)
-                self.bytes_recv = int(line_splt[10]) * (self.nranks - 1)
-            self.bytes_total = self.bytes_recv + self.bytes_sent
-        elif mpi_op == 'MPI_Allreduce':
+            #else:
+                #for i in range(0,self.nranks):
+                    #if not i == self.source:
+                        #self.sent_to[i] = int(line_splt[10])
+                        #self.recv_from[i] = int(line_splt[10])
+                #self.bytes_sent = int(line_splt[10]) * (self.nranks - 1)
+                #self.bytes_recv = int(line_splt[10]) * (self.nranks - 1)
+            #self.bytes_total = self.bytes_recv + self.bytes_sent
+        #elif mpi_op == 'MPI_Allreduce':
             # Column 10 for byte count
-            self.mpi_op_name = mpi_op
-            self.source = int(line_splt[1].replace(']', ''))
-            if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
-            if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Allreduce that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
-                print('ERROR: Allreduce to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
-            else:
-                self.sent_to[0] = int(line_splt[10])
-                self.recv_from[0] = int(line_splt[10])
-                self.bytes_sent = int(line_splt[10])
-                self.bytes_recv = int(line_splt[10])
-            self.bytes_total = self.bytes_recv + self.bytes_sent
-        elif mpi_op == 'MPI_Alltoallv':
+            #self.mpi_op_name = mpi_op
+            #self.source = int(line_splt[1].replace(']', ''))
+            #if self.nranks == 1:
+                #print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
+            #if not line_splt[13] == 'MPI_COMM_WORLD':
+                #print('Found Allreduce that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                #print('ERROR: Allreduce to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
+            #else:
+                #self.sent_to[0] = int(line_splt[10])
+                #self.recv_from[0] = int(line_splt[10])
+                #self.bytes_sent = int(line_splt[10])
+                #self.bytes_recv = int(line_splt[10])
+            #self.bytes_total = self.bytes_recv + self.bytes_sent
+        #elif mpi_op == 'MPI_Alltoallv':
             # Column 10 for byte count
-            self.mpi_op_name = mpi_op
-            self.source = int(line_splt[1].replace(']', ''))
-            if self.nranks == 1:
-                print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
-            if not line_splt[13] == 'MPI_COMM_WORLD':
-                print('Found Alltoallv that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
-                print('ERROR: Alltoallv to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
+            #self.mpi_op_name = mpi_op
+            #self.source = int(line_splt[1].replace(']', ''))
+            #if self.nranks == 1:
+                #print('Warning: to accurately analyze collectives to MPI_COMM_WORLD, please set the "nranks" keyword argument.', file=sys.stderr)
+            #if not line_splt[13] == 'MPI_COMM_WORLD':
+                #print('Found Alltoallv that is not in MPI_COMM_WORLD. Node-specific tracking will not be accurate.', file=sys.stderr)
+                #print('ERROR: Alltoallv to non-MPI_COMM_WORLD has not been implemented yet', file=sys.stderr)
                 #self.bytes_sent = int(line_splt[10]) 
                 #self.bytes_recv = int(line_splt[10])
-            else:
-                for i in range(0,self.nranks):
-                    if not i == self.source:
-                        self.sent_to[i] = int(line_splt[10])
-                        self.recv_from[i] = int(line_splt[10])
-            self.bytes_sent = int(line_splt[10])
-            self.bytes_recv = int(line_splt[10])
-            self.bytes_total = self.bytes_recv + self.bytes_sent
+            #else:
+                #for i in range(0,self.nranks):
+                    #if not i == self.source:
+                        #self.sent_to[i] = int(line_splt[10])
+                        #self.recv_from[i] = int(line_splt[10])
+            #self.bytes_sent = int(line_splt[10])
+            #self.bytes_recv = int(line_splt[10])
+            #self.bytes_total = self.bytes_recv + self.bytes_sent
