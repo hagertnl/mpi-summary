@@ -1,4 +1,4 @@
-# mpi-trace
+# mpi-summary
 
 This repository utilizes the LLNL wrap utility to write a basic MPI timing wrapper that outputs the number of seconds spent in MPI calls during a program's execution.
 This is NOT a complete implementation of any version of the MPI standard.
