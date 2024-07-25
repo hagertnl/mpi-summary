@@ -5,6 +5,13 @@ This is NOT a complete implementation of any version of the MPI standard.
 
 ## Usage
 
+Before proceeding, make sure you have initialized & updated the git submodules to clone the `wrap` utility:
+
+```
+$ git submodule init
+$ git submodule update
+```
+
 Navigate to the source directory:
 ```
 $ cd summary-wrapper
